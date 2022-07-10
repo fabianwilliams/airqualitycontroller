@@ -1,29 +1,31 @@
+#include "secrets.h"
 #include <ESP8266WiFi.h>
-#include "secrets2.h"
-#include <string>
-#include <iostream>
 #include "ThingSpeak.h"
 
 char networkname[] = SECRET_SSID;   // your network SSID (name) 
 char passcode[] = SECRET_PASS;   // your network password
-
 WiFiClient client;
 
 unsigned long tsChannelID = SECRET_CH_ID;         // ThingSpeak Channel ID
 const char *tsWriteAPIKey = SECRET_WRITE_APIKEY; // ThingSpeak Write API Key
 
+// Initialize Values 
 String airQuaility = "";
-//int alarmValue = random(0,10);
 const int fieldOne = 1;
-const int fieldTwo = 2;
+
+// Initialize our values
+String field1 = "7134RVC AQ Placeholder";
+String field2 = "Alert Status Placeholder";
+String field3 = "Status Message Placeholder";
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
     WiFi.mode(WIFI_STA);
     ThingSpeak.begin(client);
-    thingSpeak();
+    //thingSpeak(); fabian removed in v2 to do a more discreet polling of the serial
 }
+
 
 void loop()
 {
@@ -34,14 +36,17 @@ void loop()
         {
             int inChar = Serial.read();
             airQuaility += (char)inChar;
-            //alarmValue = alarmValue;            
-            //ThingSpeak.setField(fieldOne, airQuaility);
-            //ThingSpeak.setField(fieldTwo, AlarmValue;
-            //ThingSpeak.setStatus("Sensor Value is: " + String(airQuaility));
+            // set the fields with the values
+
+            field1 = Serial.read();
+            ThingSpeak.setField(1, field1);
+            ThingSpeak.setField(2, field2);
+            ThingSpeak.setField(3, field3);
+
+            ThingSpeak.setStatus(field3);
         }
     }
     pushData();
-    //pushDataTwo();
 }
 
 void thingSpeak()
@@ -57,25 +62,12 @@ void thingSpeak()
 }
 
 void pushData()
-{  
+{
     int getData = ThingSpeak.writeField(tsChannelID, fieldOne, airQuaility, tsWriteAPIKey);
-    //ThingSpeak.writeFields(tsChannelID, tsWriteAPIKey);
     if (getData != 200)
     {
         delay(15000);
         pushData();
     }
     airQuaility = "";
-}
-
-void pushDataTwo()
-{
-    int alarmValue = random(0,10);
-    int getData2 = ThingSpeak.writeField(tsChannelID, fieldTwo, alarmValue, tsWriteAPIKey);
-    //ThingSpeak.writeFields(tsChannelID, tsWriteAPIKey);
-    if (getData2 != 200)
-    {
-        delay(15000);
-        pushDataTwo();
-    }
 }
